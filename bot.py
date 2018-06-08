@@ -1,9 +1,12 @@
 # imports
 from PIL import Image
+from google import google
 import pytesseract
 import argparse
 import cv2
 import os
+import re
+import urllib2
 
 # construct the argument parse and parse the arguments
 ap = argparse.ArgumentParser()
@@ -34,5 +37,28 @@ cv2.imwrite(filename, gray)
 
 # load the image as a PIL/Pillow image, apply OCR, and then delete the temp
 text = pytesseract.image_to_string(Image.open(filename))
+text = [x.encode('ascii') for x in text.splitlines()]
 os.remove(filename)
-print(text)
+
+# We want to get the question separate from the answers and the other text
+# So, we can find the line that has a question mark, move back unit
+r = re.compile(".*\?")
+newtext = filter(r.match, text)[0]
+end_of_q = text.index(newtext)
+index = end_of_q
+while index > 0 and text[index] != '':
+    index -= 1
+length_of_q = end_of_q - index + 1
+newtext = [x for x in text[index:] if x != ''][:(length_of_q + 2)]
+newtext[:-3] = [' '.join(newtext[:-3])]
+question = newtext[0]
+choices = newtext[1:]
+queries = [(question + " \"" + x + "\"") for x in choices]
+print queries
+
+# We want to query each of a few search engines in a couple ways
+# We want to query Google, DuckDuckGo, Bing
+# Each one should be queried at least like question + "choice"
+# We might want to query each as question and then search for choice in it
+search_results = google.search("This is a sample query", 1)
+print search_results[0].number_of_results
