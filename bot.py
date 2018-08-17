@@ -32,7 +32,7 @@ class MyHandler(PatternMatchingEventHandler):
         # load the image as a PIL/Pillow image, apply OCR, then delete the temp
         text = pytesseract.image_to_string(Image.open(filename))
         text = [x.encode('ascii', 'ignore') for x in text.splitlines()]
-        #os.remove(filename)
+        os.remove(filename)
 
         # We want to get the question separate from the answers and other text
         # So, we can find the line that has a question mark, move back unit
